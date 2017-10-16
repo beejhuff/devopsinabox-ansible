@@ -1,0 +1,14 @@
+---
+##
+##
+## requires:
+## - https://galaxy.ansible.com/geerlingguy/jenkins/
+##
+ - name: Jenkins Setup
+   hosts: jenkins
+
+   roles:
+     - role: geerlingguy.jenkins
+
+   tasks:
+     - include_tasks: install-jenkins.yml

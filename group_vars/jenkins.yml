@@ -1,0 +1,24 @@
+---
+
+jenkins_version: "2.84"
+
+jenkins_hostname: jenkins.devopsinabox.perficientdevops.com
+jenkins_http_port: 8080
+jenkins_admin_username: admin
+jenkins_admin_password: !vault |
+          $ANSIBLE_VAULT;1.1;AES256
+          38366161613333643566613038653265616439626631663631383864623036323931636138666134
+          3834623062326563363830313163343638303330313634340a336630623236663634306337613438
+          63353662623735383734373736313464653330343535316632386465666665366536613638633364
+          6237323332396536610a663931323438306534306533303438363937323861623230633062333837
+          3737
+jenkins_url_prefix: ""
+
+jenkins_plugins:
+  - build-pipeline-plugin
+  - github
+  - maven-plugin
+  - pipeline-maven
+  - nexus-artifact-uploader
+  - workflow-aggregator
+  - toolenv

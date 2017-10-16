@@ -1,0 +1,26 @@
+---
+##
+## https://www.digitalocean.com/community/tutorials/how-to-install-java-on-ubuntu-with-apt-get
+##
+
+  - name: Install Python Software properties
+    apt:
+      name: python-software-properties
+      state: present
+
+  - name: Add Oracle Package Repo
+    apt_repository:
+      repo: 'ppa:webupd8team/java'
+      update_cache: yes
+
+  - name: Accept Oracle license
+    debconf:
+      name: 'oracle-java8-installer'
+      question: 'shared/accepted-oracle-license-v1-1'
+      value: 'true'
+      vtype: 'select'
+
+  - name: Install Oracle java
+    apt:
+      name: oracle-java8-installer
+      state: present

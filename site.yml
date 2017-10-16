@@ -1,0 +1,9 @@
+---
+##
+## AWS devopsinabox tool setup
+##
+
+  - import_playbook: oracle-java.yml
+  - import_playbook: jenkins.yml
+  - import_playbook: nexus.yml
+  - import_playbook: tomcat.yml

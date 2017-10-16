@@ -1,0 +1,7 @@
+
+.DS_Store
+ansible/logs/**
+*.retry
+
+# ignore galaxy roles, we do not own, these should be imported
+roles/geerlingguy.*

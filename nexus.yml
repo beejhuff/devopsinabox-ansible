@@ -1,0 +1,8 @@
+---
+
+  - name: Setup Nexus
+    hosts: nexus
+    become: true
+
+    tasks:
+      - import_tasks: install-nexus.yml

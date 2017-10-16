@@ -1,0 +1,7 @@
+#
+# http://docs.ansible.com/ansible/latest/galaxy.html#installing-multiple-roles-from-a-file
+#
+# ansible-galaxy install -r requirements.yml
+
+ - src: geerlingguy.java
+ - src: geerlingguy.jenkins

@@ -1,0 +1,206 @@
+---
+##
+## Setup a multi-instance Tomcat machine for deployment targets
+##
+## * https://help.ubuntu.com/lts/serverguide/tomcat.html#tomcat-user
+## * http://www.techrepublic.com/article/how-to-install-apache-tomcat-on-ubuntu-server-16-04/
+##
+
+  - name: Create link to default java home
+    file:
+      src: "{{ java_home }}"
+      dest: /usr/lib/jvm/default-java
+      state: link
+
+  - name: Install packages
+    apt:
+      name: "{{ item }}"
+      state: present
+    with_items:
+      - tomcat7
+      - tomcat7-admin
+      - tomcat7-user
+
+  - name: Set Java Home
+    copy:
+      content: |
+        export JAVA_HOME={{ java_home }}
+      dest: "{{ item }}"
+    with_items:
+      - /etc/profile.d/java_home.sh
+      - /usr/share/tomcat7/bin/setenv.sh
+
+  - name: Update executable status
+    file:
+      path: "{{ item }}"
+      mode: 0755
+    with_items:
+      - /etc/profile.d/java_home.sh
+      - /usr/share/tomcat7/bin/setenv.sh
+
+  - name: Disable default service
+    service:
+      name: tomcat7
+      enabled: no
+      state: stopped
+
+  - name: Make JPetStore base directory
+    file:
+      path: /opt/jpetstore
+      state: directory
+
+  - name: Setup Tomcat user instances
+    command: tomcat7-instance-create -p {{ item.tomcat_port }} -c {{ item.tomcat_connector_port }} /opt/jpetstore/{{ item.name }}
+    args:
+      creates: /opt/jpetstore/{{ item.name }}
+    with_items:
+      - "{{ target_envs }}"
+
+  - name: Setup users for instances
+    copy:
+      dest: "/opt/jpetstore/{{ item.name }}/conf/tomcat-users.xml"
+      content: |
+        <?xml version='1.0' encoding='utf-8'?>
+        <tomcat-users>
+         <role rolename="manager-script"/>
+         <role rolename="manager-gui"/>
+         <user name="{{ tomcat_script_user }}" password="{{ tomcat_user_password}}" roles="manager-script" />
+         <user name="{{ tomcat_manager_user }}" password="{{ tomcat_user_password}}" roles="manager-gui" />
+        </tomcat-users>
+    with_items:
+      - "{{ target_envs }}"
+
+  - name: Create default content location
+    file:
+      path: /opt/jpetstore/{{ item.name }}/webapps/ROOT
+      state: directory
+    with_items:
+      - "{{ target_envs }}"
+
+  - name: Update the default content with redirect to JPetStore
+    copy:
+      dest: "/opt/jpetstore/{{ item.name }}/webapps/ROOT/index.jsp"
+      content: |
+        <% response.sendRedirect("/JPetStore/"); %>
+    with_items:
+      - "{{ target_envs }}"
+
+  - name: Create configuration location
+    file:
+      path: /opt/jpetstore/{{ item.name }}/conf/Catalina/localhost
+      state: directory
+      recurse: true
+    with_items:
+      - "{{ target_envs }}"
+
+  - name: Copy over tomcat-manager configurations to allow remote deployments
+    copy:
+      src:  /etc/tomcat7/Catalina/localhost/{{ item[0] }}
+      dest: /opt/jpetstore/{{ item[1].name }}/conf/Catalina/localhost/{{ item[0] }}
+      remote_src: yes
+    with_nested:
+      - [ 'manager.xml', 'host-manager.xml' ]
+      - "{{ target_envs }}"
+
+  - name: Blanket update permissions for jpetstore instances
+    file:
+      path: /opt/jpetstore
+      recurse: true
+      owner: "{{ tomcat_run_user }}"
+      group: "{{ tomcat_run_group }}"
+
+  - name: Create systemd service for each instance
+    copy:
+      dest: /etc/systemd/system/jpetstore-{{ item.name }}.service
+      content: |
+        [Unit]
+        Description=Apache Tomcat Web Application Container
+        After=network.target
+
+        [Service]
+        Type=forking
+
+        Environment=JAVA_HOME={{ java_home }}
+        Environment=CATALINA_PID=/opt/jpetstore/{{ item.name }}/temp/tomcat.pid
+        Environment=CATALINA_HOME=/usr/share/tomcat7
+        Environment=CATALINA_BASE=/opt/jpetstore/{{ item.name }}/
+        Environment='CATALINA_OPTS=-Xms128M -Xmx256M -server -XX:+UseParallelGC'
+        Environment='JAVA_OPTS=-Djava.awt.headless=true -Djava.security.egd=file:/dev/./urandom'
+
+        ExecStart=/opt/jpetstore/{{ item.name }}/bin/startup.sh
+        ExecStop=/opt/jpetstore/{{ item.name }}/bin/shutdown.sh
+
+        User={{ tomcat_run_user }}
+        Group={{ tomcat_run_group }}
+        UMask=0007
+        RestartSec=10
+        Restart=always
+
+        [Install]
+        WantedBy=multi-user.target
+    with_items:
+      - "{{ target_envs }}"
+
+  - name: Enable and start instance services
+    service:
+      name: jpetstore-{{ item.name }}
+      enabled: yes
+      state: started
+    with_items:
+      - "{{ target_envs }}"
+
+
+
+
+  # Create MySQL dbs
+  # create user 'jpetstore'@'localhost' identified by 'jppwd';
+  # create database dev_jpetstore;
+  # grant all privileges on dev_jpetstore.* to 'jpetstore'@'localhost';
+  # create database prod_jpetstore;
+  # grant all privileges on prod_jpetstore.* to 'jpetstore'@'localhost';
+
+  - name: Install packages
+    apt:
+      name: "{{ item }}"
+    with_items:
+      - mysql-server
+      - libmysqlclient-dev
+      - libmariadb-client-lgpl-dev
+      - python-dev
+      - python-mysqldb
+      - python-pip
+    tags:
+      - db
+
+  # sudo ln -s /usr/bin/mariadb_config /usr/bin/mysql_config
+  # - name: Workaround for Ubuntu 16.04
+  #   file:
+  #     state: link
+  #     src: /usr/bin/mariadb_config
+  #     dest: /usr/bin/mysql_config
+  #   tags:
+  #     - db
+  #
+  # - name: Install the Python MySQLB module
+  #   pip:
+  #     name=MySQL-python
+  #   tags:
+  #     - db
+
+  - name: Setup Database
+    mysql_db:
+      name: "{{ item.name }}_jpetstore"
+      state: present
+    with_items:
+      - "{{ target_envs }}"
+    tags:
+      - db
+
+  - name: Setup DB User
+    mysql_user:
+      name: "{{ db_user }}"
+      password: "{{ db_password }}"
+      priv: '*.*:ALL'
+      state: present
+    tags:
+      - db

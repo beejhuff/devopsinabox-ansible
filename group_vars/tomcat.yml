@@ -1,0 +1,49 @@
+---
+
+java_home: /usr/lib/jvm/java-8-oracle
+tomcat_run_user: tomcat7
+tomcat_run_group: tomcat7
+
+tomcat_port: 8080
+tomcat_connector_port: 8005
+tomcat_script_user: tomcat
+tomcat_manager_user: tomcatmanager
+tomcat_user_password: !vault |
+          $ANSIBLE_VAULT;1.1;AES256
+          33366665316631646531333136373736366361366232666235616131396337373733316664346266
+          6637643163633231396265313832626266376231383464370a303532326439666535383232653134
+          66333637383966633733323065383432313263666637306532633537633965353463343538636133
+          6664386433663965610a613737336338623433653733643137326234333765303836383634643037
+          3336
+db_user: jpetstore
+db_password: !vault |
+          $ANSIBLE_VAULT;1.1;AES256
+          33633431343535373063643962373534643666373330653164386665336637346438616434316632
+          6233376365646431363630393362383034636563623037360a336365323631303931356163373762
+          64393065303164643833353638366462363739633134323762633264656261336663396336373239
+          3536303665363066330a356163623738613734346461326139623531383265656565623361323430
+          6262
+
+
+## TODO: refactor target_envs to use this format
+## http://docs.ansible.com/ansible/latest/playbooks_loops.html#looping-over-subelements
+
+target_envs_old:
+ - dev
+ - qa
+ - uat
+ - prod
+
+target_envs:
+ - name: dev
+   tomcat_port: 8081
+   tomcat_connector_port: 8006
+ - name: qa
+   tomcat_port: 8082
+   tomcat_connector_port: 8007
+ - name: uat
+   tomcat_port: 8083
+   tomcat_connector_port: 8008
+ - name: prod
+   tomcat_port: 8084
+   tomcat_connector_port: 8009

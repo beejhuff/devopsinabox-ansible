@@ -1,0 +1,8 @@
+---
+
+  - name: Setup Tomcat Target Environments
+    hosts: tomcat
+    become: true
+
+    tasks:
+      - import_tasks: install-tomcat.yml

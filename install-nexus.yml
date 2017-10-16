@@ -1,0 +1,120 @@
+---
+# Nexus Repo 3 OSS
+# https://help.sonatype.com/display/NXRM3/Installation
+
+  # https://help.sonatype.com/display/NXRM3/System+Requirements#filehandles
+  - name: Update System file limits
+    pam_limits:
+      domain: "{{ nexus_user }}"
+      limit_type: "-"
+      limit_item: nofile
+      value: 65536
+    tags:
+      - pam
+
+  ## TODO: This is not updated correctly
+  ## /etc/pam.d/common-session
+  ## session required pam_limits.so
+  - name: Update PAM to enforce limits
+    pamd:
+      name: common-session-noninteractive
+      type: session
+      control: sufficient
+      module_path: pam_systemd.so
+      module_arguments: ''
+      state: after
+      new_type: session
+      new_control: required
+      new_module_path: pam_limits.so
+    tags:
+      - pam
+
+  - name: Define NEXUS_HOME
+    set_fact:
+      nexus_home: "{{ nexus_install_path }}/nexus-{{ nexus_version }}"
+    when: nexus_home is not defined
+
+  - name: Download Nexus archive
+    get_url:
+      url: "http://download.sonatype.com/nexus/{{ nexus_major_version }}/nexus-{{ nexus_version }}-unix.tar.gz"
+      dest: /tmp/nexus-{{ nexus_version }}.tar.gz
+      mode: 0755
+
+  ## Create run user/group
+  - name: Create Nexus group
+    group:
+      name: "{{ nexus_group }}"
+      state: present
+
+  - name: Create Nexus user
+    user:
+      name: "{{ nexus_user }}"
+      home: "{{ nexus_install_path }}"
+      shell: /bin/bash
+      group: "{{ nexus_group }}"
+      state: present
+
+  ## Extract installer and update perms
+  - name: Ensure install directory exists
+    file:
+      path: "{{ nexus_install_path }}"
+      state: directory
+      owner: "{{ nexus_user }}"
+      group: "{{ nexus_group }}"
+
+  - name: Extract Nexus install
+    unarchive:
+      src: /tmp/nexus-{{ nexus_version }}.tar.gz
+      dest: "{{ nexus_install_path }}"
+      remote_src: yes
+      owner: "{{ nexus_user }}"
+      group: "{{ nexus_group }}"
+      creates: "{{ nexus_install_path }}/sonatype-work"
+
+  ## Setup for Nexus as service
+  - name: Update run user in install
+    lineinfile:
+      path: "{{ nexus_home }}/bin/nexus.rc"
+      line: 'run_as_user="{{ nexus_user }}"'
+
+  - name: Update run user in install
+    copy:
+      content: |
+        NEXUS_HOME="{{ nexus_home }}"
+      dest: "{{ nexus_install_path }}/.bashrc"
+
+  - name: Create systemd service file
+    copy:
+      content: |
+        [Unit]
+        Description=Nexus service
+        After=network.target
+
+        [Service]
+        Type=forking
+        LimitNOFILE=65536
+        ExecStart={{ nexus_home }}/bin/nexus start
+        ExecStop={{ nexus_home }}/bin/nexus stop
+        User={{ nexus_user }}
+        Restart=on-abort
+
+        [Install]
+        WantedBy=multi-user.target
+      dest: /etc/systemd/system/nexus.service
+
+  ## Enable and start the service
+  - name: Enable and start sevice
+    service:
+      name: nexus
+      enabled: yes
+      state: started
+
+  ## Cleanup any permissions
+  - name: Update install ownership
+    file:
+      path: "{{ nexus_install_path }}"
+      state: directory
+      owner: "{{ nexus_user }}"
+      group: "{{ nexus_group }}"
+      mode: 0755
+      recurse: yes

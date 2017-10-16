@@ -1,0 +1,51 @@
+---
+##
+## Helper to quickly update and reboot all the machines
+##
+
+ - name: Run apt update/upgrade and restart systems
+   hosts: servers
+   become: true
+   remote_user: ubuntu
+
+   tasks:
+
+    - name: Only run "update_cache=yes" if the last one is more than 3600 seconds ago
+      apt:
+        update_cache: yes
+        cache_valid_time: 3600
+
+    - name: Update all packages to the latest version
+      apt:
+        upgrade: dist
+
+    - name: Remove useless packages from the cache
+      apt:
+        autoclean: yes
+
+    - name: Remove dependencies that are no longer required
+      apt:
+        autoremove: yes
+
+    ## This is a PIA, and is not working...
+    ## https://github.com/ansible/ansible/issues/14413
+    - name: Restart the systems
+      command: sleep 2 && /sbin/shutdown -r now
+      async: 1
+      poll: 0
+
+    - name: Let the machines reboot for 10s before polling
+      become: false
+      wait_for:
+        timeout: 10
+      delegate_to: localhost
+
+    - name: wait for server to come back
+      become: false
+      local_action: wait_for
+      args:
+        host: "{{ inventory_hostname }}"
+        port: 22
+        state: started
+        delay: 60
+        timeout: 120

@@ -1,0 +1,8 @@
+---
+
+  - name: Setup Oracle Java on target machines
+    hosts: all
+    become: true
+
+    tasks:
+      - include_tasks: install-oracle-java.yml
