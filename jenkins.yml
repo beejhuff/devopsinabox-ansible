@@ -6,9 +6,10 @@
 ##
  - name: Jenkins Setup
    hosts: jenkins
+   become: true
 
    roles:
      - role: geerlingguy.jenkins
 
    tasks:
-     - include_tasks: install-jenkins.yml
+     - import_tasks: install-jenkins.yml
