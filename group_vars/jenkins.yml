@@ -15,6 +15,7 @@ jenkins_admin_password: !vault |
 jenkins_url_prefix: ""
 
 jenkins_plugins:
+  - blueocean
   - build-pipeline-plugin
   - github
   - maven-plugin
