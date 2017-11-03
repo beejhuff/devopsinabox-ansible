@@ -1,0 +1,27 @@
+---
+##
+##
+##
+ - name: UCR Setup
+   hosts: release
+   become: true
+
+   vars:
+     ucr_home: /opt/IBM/UCRelease
+     ibm_java_home: /opt/IBM/UCRelease/server/jre
+     java_bins:
+       - java
+       - javaws
+       - javaw
+
+   tasks:
+
+     - name: Install IBM Java as option
+       command: update-alternatives --install /usr/bin/{{ item }} {{ item }} {{ ibm_java_home }}/bin/{{ item }} 1
+       with_items: "{{ java_bins }}"
+
+     - name: Update java alternatives to make IBM the default
+       command: update-alternatives --set {{ item }} {{ ibm_java_home }}/bin/{{ item }}
+       with_items: "{{ java_bins }}"
+
+     ## TODO: add UCR services restart to this script as it is required to pick up this change

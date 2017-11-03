@@ -7,3 +7,4 @@
   - import_playbook: jenkins.yml
   - import_playbook: nexus.yml
   - import_playbook: tomcat.yml
+  - import_playbook: ucr.yml
