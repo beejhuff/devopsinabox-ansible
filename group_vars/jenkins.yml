@@ -1,6 +1,6 @@
 ---
 
-jenkins_version: "2.85"
+jenkins_version: "2.90"
 
 jenkins_hostname: jenkins.devopsinabox.perficientdevops.com
 jenkins_http_port: 8080
@@ -17,10 +17,13 @@ jenkins_url_prefix: ""
 jenkins_plugins:
   - blueocean
   - build-pipeline-plugin
+  - build-timestamp
   - github
   - maven-plugin
   - pipeline-maven
+  - pipeline-utility-steps
   - nexus-artifact-uploader
+  - nodelabelparameter
   - workflow-aggregator
   - ws-cleanup
   - toolenv

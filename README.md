@@ -6,11 +6,6 @@ AWS EC2 instances and Route53 for domain management.
 
 ### Servers
 
- Users:
-  Admin in all tools: admin/D3v0ps!
-  Tomcat: tomcat / changeme & tomcatmanager / changeme
-  MySQL: root / s3cr3t & jpetstore/s3cr3t
-
  * [Github JPetStore](https://github.com/Perficient-DevOps/jpetstore-6)
  * [Jenkins OSS](http://jenkins.devopsinabox.perficientdevops.com:8080)
  * [Nexus OSS](http://nexus.devopsinabox.perficientdevops.com:8081)

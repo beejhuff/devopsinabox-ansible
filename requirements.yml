@@ -5,3 +5,4 @@
 
  - src: geerlingguy.java
  - src: geerlingguy.jenkins
+   version: 3.2.1
