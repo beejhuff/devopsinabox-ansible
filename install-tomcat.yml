@@ -159,6 +159,26 @@
   # create database prod_jpetstore;
   # grant all privileges on prod_jpetstore.* to 'jpetstore'@'localhost';
 
+
+
+  # How to setup MySQL root user password non-interactively
+  # https://coderwall.com/p/sqdaya/mysql-server-installation-with-custom-password-in-ansible--2
+  - name: Mysql | Set root password
+    #shell: debconf-set-selections <<< 'mysql-server mysql-server/root_password password {{ mysql_root_pw }}'
+    debconf:
+      name: mysql-server
+      question: mysql-server/root_password
+      value: "{{ mysql_root_pw }}"
+      vtype: password
+
+  - name: Mysql | Set root repassword
+    #shell: debconf-set-selections <<< 'mysql-server mysql-server/root_password_again password {{ mysql_root_pw }}'
+    debconf:
+      name: mysql-server
+      question: mysql-server/root_password_again
+      value: "{{ mysql_root_pw }}"
+      vtype: password
+
   - name: Install packages
     apt:
       name: "{{ item }}"
@@ -171,6 +191,12 @@
       - python-pip
     tags:
       - db
+
+  - name: Enable MySQL service and start
+    service:
+      name: mysql
+      enabled: yes
+      state: started
 
   # sudo ln -s /usr/bin/mariadb_config /usr/bin/mysql_config
   # - name: Workaround for Ubuntu 16.04

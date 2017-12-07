@@ -1,7 +1,9 @@
 
 ### Infrastructure
 
-AWS EC2 instances and Route53 for domain management.
+AWS EC2 instances and Route53 for domain management, this was done initially manually but see `provision_aws_infra` for a working example of adding this piece as well.
+
+
 
 
 ### Servers
@@ -29,7 +31,7 @@ Testing:
 
 This is example is for a group variable to be stored in `group_vars\jenkins.yml`
 
-    $ ansible-vault encrypt_string --name jenkins_admin_password 's3c3t'
+    $ ansible-vault encrypt_string --name jenkins_admin_password 's3cr3t'
     jenkins_admin_password: !vault |
               $ANSIBLE_VAULT;1.1;AES256
               35653038386461633032653338613062623633396563373537326461643131323139383132376138

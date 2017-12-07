@@ -1,0 +1,37 @@
+---
+
+ - name: Setup secondary disk
+   hosts: nexus
+   become: true
+   remote_user: ubuntu
+
+   vars:
+    new_dev: /dev/xvdb
+    new_dev_part: "{{ new_dev }}1"
+    fstype: ext4
+    mount_path: /data
+
+   tasks:
+    - name: Create partition
+      parted:
+        device: "{{ new_dev }}"
+        number: 1
+        state: present
+
+    - name: Make new filesystem
+      filesystem:
+        fstype: "{{ fstype }}"
+        dev: "{{ new_dev_part }}"
+
+    - name: Ensure mount point exists
+      file:
+        state: directory
+        path: "{{ mount_path }}"
+
+    - name: Mount the new filesystem
+      mount:
+        path: "{{ mount_path }}"
+        src: "{{ new_dev_part }}"
+        fstype: "{{ fstype }}"
+        opts: defaults
+        state: mounted
