@@ -30,7 +30,7 @@
     ## This is a PIA, and is not working...
     ## https://github.com/ansible/ansible/issues/14413
     - name: Restart the systems
-      command: sleep 2 && /sbin/shutdown -r now
+      shell: sleep 2 && /sbin/shutdown -r now
       async: 1
       poll: 0
 

@@ -1,6 +1,6 @@
 ---
 
-jenkins_version: "2.93"
+jenkins_version: "2.98"
 
 jenkins_hostname: jenkins.devopsinabox.perficientdevops.com
 jenkins_http_port: 8080
